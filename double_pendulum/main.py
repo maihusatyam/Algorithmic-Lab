@@ -1,1 +1,130 @@
 
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
+# Gravity
+g = 9.81
+
+# Length of rods
+l1 = 1
+l2 = 1
+
+# Mass of bobs
+m1 = 1
+m2 = 1
+
+# Initial angles
+theta1 = np.pi / 2
+theta2 = np.pi / 2
+
+# Initial angular velocities
+omega1 = 0
+omega2 = 0
+
+# Small timestep
+dt = 0.01
+
+# Lists to store trail points
+xtrail = []
+ytrail = []
+
+# Create graph window
+fig, ax = plt.subplots()
+
+#Theme
+# Background colors
+fig.patch.set_facecolor('black')
+ax.set_facecolor('black')
+
+# Axis colors
+ax.spines['bottom'].set_color('yellow')
+ax.spines['top'].set_color('yellow')
+ax.spines['left'].set_color('yellow')
+ax.spines['right'].set_color('yellow')
+
+# Tick colors
+ax.tick_params(colors='yellow')
+
+# Grid
+ax.grid(color='gray')
+
+# Set graph limits
+ax.set_xlim(-2.5, 2.5)
+ax.set_ylim(-2.5, 2.5)
+
+# Draw pendulum
+line, = ax.plot([], [], 'o-', lw=2, color='cyan', markersize=8)
+
+# Draw trail
+trail, = ax.plot([], [], lw=1, color='gold')
+
+# Animation function
+def update(frame):
+
+    global theta1, theta2
+    global omega1, omega2
+
+    # Difference between angles
+    d = theta2 - theta1
+
+    # Denominator for first equation
+    den1 = (m1 + m2) * l1 - m2 * l1 * np.cos(d)**2
+
+    # Angular acceleration of first bob
+    alpha1 = (
+        m2 * l1 * omega1**2 * np.sin(d) * np.cos(d)
+        + m2 * g * np.sin(theta2) * np.cos(d)
+        + m2 * l2 * omega2**2 * np.sin(d)
+        - (m1 + m2) * g * np.sin(theta1)
+    ) / den1
+
+    # Denominator for second equation
+    den2 = (l2 / l1) * den1
+
+    # Angular acceleration of second bob
+    alpha2 = (
+        -m2 * l2 * omega2**2 * np.sin(d) * np.cos(d)
+        + (m1 + m2) * g * np.sin(theta1) * np.cos(d)
+        - (m1 + m2) * l1 * omega1**2 * np.sin(d)
+        - (m1 + m2) * g * np.sin(theta2)
+    ) / den2
+
+    # Update angular velocities
+    omega1 += alpha1 * dt
+    omega2 += alpha2 * dt
+
+    # Update angles
+    theta1 += omega1 * dt
+    theta2 += omega2 * dt
+
+    # Position of first bob
+    x1 = l1 * np.sin(theta1)
+    y1 = -l1 * np.cos(theta1)
+
+    # Position of second bob
+    x2 = x1 + l2 * np.sin(theta2)
+    y2 = y1 - l2 * np.cos(theta2)
+
+    # Store trail points
+    xtrail.append(x2)
+    ytrail.append(y2)
+
+    # Update pendulum drawing
+    line.set_data([0, x1, x2], [0, y1, y2])
+
+    # Update trail drawing
+    trail.set_data(xtrail, ytrail)
+
+    return line, trail
+
+# Create animation
+ani = FuncAnimation(
+    fig,
+    update,
+    frames=1000,
+    interval=20
+)
+
+# Show simulation
+plt.show()
